@@ -1,7 +1,5 @@
 package com.cyecize.demo.api.account;
 
-import com.cyecize.demo.config.db.DataSourceType;
-import com.cyecize.demo.config.routing.WithDatabase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
