@@ -2,7 +2,7 @@ package com.cyecize.demo.config.routing;
 
 import com.cyecize.demo.api.account.AccountRepository;
 import com.cyecize.demo.config.db.DataSourceType;
-import com.cyecize.demo.config.db.RoutingDataSource;
+import com.cyecize.demo.config.db.DatabaseContextHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -33,22 +33,22 @@ public class RoutingRepositoryConfig {
     }
 
     private <E, ID, T extends JpaRepository<E, ID>> T createProxyInstance(T repository) {
-        Class<?> repositoryType = repository.getClass().getInterfaces()[0];
-        DataSourceType dataSourceType = repositoryType.getAnnotation(WithDatabase.class).value();
+        final Class<?> repositoryType = repository.getClass().getInterfaces()[0];
+        final DataSourceType dataSourceType = repositoryType.getAnnotation(WithDatabase.class).value();
 
         Object instance;
         try {
             instance = Proxy.newProxyInstance(
                     Thread.currentThread().getContextClassLoader(),
                     new Class[]{repositoryType},
-                    (proxy, method, args) -> this.transactionalHelper.runWithTransaction(() -> {
+                    (proxy, method, args) -> {
+                        DatabaseContextHolder.setCtx(dataSourceType);
                         try {
-                            RoutingDataSource.setCtx(dataSourceType);
-                            return method.invoke(repository, args);
+                            return this.transactionalHelper.runWithTransaction(() -> method.invoke(repository, args));
                         } finally {
-                            RoutingDataSource.restoreCtx();
+                            DatabaseContextHolder.restoreCtx();
                         }
-                    })
+                    }
             );
         } catch (Exception ex) {
             log.error("Error while creating proxy for class {}", repository, ex);

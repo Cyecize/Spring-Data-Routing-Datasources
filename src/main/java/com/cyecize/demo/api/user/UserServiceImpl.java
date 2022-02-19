@@ -3,6 +3,8 @@ package com.cyecize.demo.api.user;
 import com.cyecize.demo.config.db.DataSourceType;
 import com.cyecize.demo.config.routing.WithDatabase;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -42,7 +44,28 @@ public class UserServiceImpl implements UserService {
         return this.findAll();
     }
 
+    @Override
+    public Page<User> findAllDS1(Pageable pageable) {
+        return this.findAll(pageable);
+    }
+
+    @Override
+    @WithDatabase(DataSourceType.SECONDARY)
+    public Page<User> findAllDS2(Pageable pageable) {
+        return this.findAll(pageable);
+    }
+
+    @Override
+    @WithDatabase(DataSourceType.TERTIARY)
+    public Page<User> findAllDS3(Pageable pageable) {
+        return this.findAll(pageable);
+    }
+
     private List<User> findAll() {
         return this.userRepository.findAll();
+    }
+
+    private Page<User> findAll(Pageable pageable) {
+        return this.userRepository.findAll(pageable);
     }
 }
